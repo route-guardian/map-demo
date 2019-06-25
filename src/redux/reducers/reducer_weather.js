@@ -1,4 +1,4 @@
-import { FETCH_WEATHER } from '../actions/index';
+import { FETCH_WEATHER } from '../actions/weather';
 
 export default function (state = [], action) {
     // eslint-disable-next-line

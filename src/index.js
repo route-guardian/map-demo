@@ -6,12 +6,13 @@ import * as serviceWorker from './serviceWorker';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import { createStore, applyMiddleware } from 'redux';
+import logger from 'redux-logger'
 import ReduxPromise from 'redux-promise';
 
 import App from './components/App';
-import reducers from './reducers';
+import reducers from './redux/reducers';
 
-const createStoreWithMiddleware = applyMiddleware(ReduxPromise)(createStore);
+const createStoreWithMiddleware = applyMiddleware(ReduxPromise, logger)(createStore);
 
 ReactDOM.render(
     <Provider store={createStoreWithMiddleware(reducers)}>

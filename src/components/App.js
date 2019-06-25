@@ -1,26 +1,14 @@
 import React from 'react';
-import logo from '../images/logo.svg';
-import ApiTest from './apiTest';
+import { BrowserRouter as Router, Route } from "react-router-dom";
+import Default from './Default';
+import Map from './Map';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <ApiTest />
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Route path="/" exact component={Default} />
+      <Route path="/map" component={Map} />
+    </Router>
   );
 }
 
