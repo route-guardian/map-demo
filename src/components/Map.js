@@ -5,6 +5,7 @@ import { bindActionCreators } from 'redux';
 import { fetchGeolocations } from '../redux/actions/geolocations';
 import { fetchSafetyScores } from '../redux/actions/safetyScores';
 import { MAP_BOX } from '../redux/keys';
+import createGeoJson from '../js/createGeoJson.js';
 
 class Map extends Component {
 
@@ -13,9 +14,21 @@ class Map extends Component {
 
         this.props.fetchSafetyScores();
         this.props.fetchGeolocations();
+		this.state = {
+			mapState: false
+		}
     }
 
     componentDidMount() {
+        const { geolocations, safetyScores } = this.props;
+		this.generateMap();
+    }
+
+    componentWillUnmount() {
+        this.map.remove();
+    }
+
+	generateMap = () => {
         mapboxgl.accessToken = MAP_BOX;
         this.map = new mapboxgl.Map({
             container: this.mapContainer,
@@ -24,21 +37,15 @@ class Map extends Component {
             zoom: 12,
             pitch: 45
         });
-    }
 
-    componentWillUnmount() {
-        this.map.remove();
-    }
+		this.map.addControl(new mapboxgl.NavigationControl());
 
-    componentDidUpdate() {
-        const { geolocations, safetyScores } = this.props;
-
-        if (geolocations.length > 0) {
-            geolocations.forEach((location) => {
-                console.log(location);
-            });
-        }
-    }
+		this.map.on('load', () => {
+			this.setState({
+				mapState: true
+			});
+		});
+	}
 
     generateMarkers = () => {
         const { geolocations, safetyScores } = this.props;
@@ -46,6 +53,7 @@ class Map extends Component {
         for (var location in geolocations[0]) {
             const lat = geolocations[0][location][0];
             const lng = geolocations[0][location][1];
+            // console.log(safetyScores[0][location]);
             const safetyScore = safetyScores[0][location];
 
             if (lat !== undefined || lng !== undefined) {
@@ -60,12 +68,77 @@ class Map extends Component {
         }
     }
 
+	generateHeatMap = (safetyGeoJson) => {
+        // const { safetyGeoJson } = this.props;
+		console.log(safetyGeoJson);
+			// Add a geojson point source.
+			// Heatmap layers also work with a vector tile source.
+		this.map.addSource('safetyData', {
+			"type": "geojson",
+			"data": safetyGeoJson
+		});
+		
+		this.map.addLayer({
+			id: 'safety-heat',
+			type: 'heatmap',
+			source: 'safetyData',
+			maxzoom: 15,
+			paint: {
+				// increase weight as diameter breast height increases
+				'heatmap-weight': {
+				property: 'data',
+				type: 'exponential',
+					stops: [
+						[1, 0],
+						[62, 1]
+					]
+				},
+				// increase intensity as zoom level increases
+				'heatmap-intensity': {
+					stops: [
+						[14, 1],
+						[15, 1]
+					]
+				},
+				// assign color values be applied to points depending on their density
+				'heatmap-color': [
+					'interpolate',
+					['linear'],
+					['heatmap-density'],
+					0, 'rgba(236,222,239,0)',
+					0.2, 'rgb(208,209,230)',
+					0.4, 'rgb(166,189,219)',
+					0.6, 'rgb(103,169,207)',
+					0.8, 'rgb(28,144,153)'
+				],
+				// increase radius as zoom increases
+				'heatmap-radius': {
+					stops: [
+						[14, 175],
+						[15, 125]
+					]
+				},
+				// decrease opacity to transition into the circle layer
+				'heatmap-opacity': {
+					default: 1,
+					stops: [
+						[14, 1],
+						[15, 0]
+					]
+				},
+			}
+		}, 'waterway-label');
+	}
+
     render() {
         const { geolocations, safetyScores } = this.props;
+		const { mapState } = this.state;
 
-        if (geolocations.length > 0) {
-            this.generateMarkers();
-        }
+		if(mapState) {
+			this.generateMarkers();	
+			const safetyGeoJson = createGeoJson(geolocations[0], safetyScores[0]);
+			this.generateHeatMap(safetyGeoJson);
+		}
 
         return (
             <div className="mapBox" ref={el => this.mapContainer = el} ></div>
