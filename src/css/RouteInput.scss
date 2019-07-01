@@ -1,0 +1,12 @@
+.routeInput {
+    position: fixed;
+    top: calc(50% - 10rem);
+    left: 5rem;
+    width: 250px;
+    height: 450px;
+    padding: 10px;
+    background-color: $color-white;
+    z-index: 1;
+    border-radius: 1rem;
+    font-family: 'Raleway', sans-serif;
+}

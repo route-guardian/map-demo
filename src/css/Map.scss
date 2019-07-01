@@ -5,4 +5,10 @@
   width: 100%;
   height: 100vh;
   background-color: red;
+
+  &--selecting {
+    .mapboxgl-canvas-container { 
+      cursor: crosshair !important 
+    }
+  }
 }

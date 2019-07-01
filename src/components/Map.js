@@ -4,80 +4,105 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { fetchGeolocations } from '../redux/actions/geolocations';
 import { fetchSafetyScores } from '../redux/actions/safetyScores';
+import classNames from 'classnames';
 import { MAP_BOX } from '../redux/keys';
 import createGeoJson from '../js/createGeoJson.js';
+import RouteInput from './RouteInput';
 
 class Map extends Component {
 
-    constructor(props) {
-        super(props);
+	constructor(props) {
+		super(props);
 
-        this.props.fetchSafetyScores();
-        this.props.fetchGeolocations();
+		this.props.fetchSafetyScores();
+		this.props.fetchGeolocations();
 		this.state = {
-			mapState: false
+			mapState: false,
+			layerState: false,
+			selectingLocation: false
 		}
-    }
+	}
 
-    componentDidMount() {
-        const { geolocations, safetyScores } = this.props;
-		this.generateMap();
-    }
+	componentDidMount() {
+		const {mapState} = this.state;
 
-    componentWillUnmount() {
-        this.map.remove();
-    }
+		if(!mapState) {
+			this.generateMap();
+		}
+	}
+
+	componentWillUnmount() {
+		this.map.remove();
+	}
 
 	generateMap = () => {
-        mapboxgl.accessToken = MAP_BOX;
-        this.map = new mapboxgl.Map({
-            container: this.mapContainer,
-            style: 'mapbox://styles/mapbox/streets-v9',
-            center: [4.47917, 51.9025],
-            zoom: 12,
-            pitch: 45
-        });
+		mapboxgl.accessToken = MAP_BOX;
+		this.map = new mapboxgl.Map({
+			container: this.mapContainer,
+			style: 'mapbox://styles/mapbox/streets-v9',
+			center: [4.47917, 51.9025],
+			zoom: 12,
+			pitch: 45
+		});
 
 		this.map.addControl(new mapboxgl.NavigationControl());
 
 		this.map.on('load', () => {
 			this.setState({
-				mapState: true
+				mapState: true,
 			});
 		});
 	}
 
-    generateMarkers = () => {
-        const { geolocations, safetyScores } = this.props;
+	generateMarkers = () => {
+		const { geolocations, safetyScores } = this.props;
 
-        for (var location in geolocations[0]) {
-            const lat = geolocations[0][location][0];
-            const lng = geolocations[0][location][1];
-            // console.log(safetyScores[0][location]);
-            const safetyScore = safetyScores[0][location];
+		for (var location in geolocations[0]) {
+			const lat = geolocations[0][location][0];
+			const lng = geolocations[0][location][1];
+			// console.log(safetyScores[0][location]);
+			const safetyScore = safetyScores[0][location];
 
-            if (lat !== undefined || lng !== undefined) {
-                const popup = new mapboxgl.Popup({ offset: 25 })
-                    .setText(location + ' [' + safetyScore + ']' + ' [' + lng + ' ' + lat + ']');
+			if (lat !== undefined || lng !== undefined) {
+				const popup = new mapboxgl.Popup({ offset: 25 })
+					.setText(location + ' [' + safetyScore + ']' + ' [' + lng + ' ' + lat + ']');
 
-                new mapboxgl.Marker()
-                    .setLngLat([lng, lat])
-                    .setPopup(popup)
-                    .addTo(this.map);
-            }
-        }
-    }
+				new mapboxgl.Marker()
+					.setLngLat([lng, lat])
+					.setPopup(popup)
+					.addTo(this.map);
+			}
+		}
+	}
+
+	selectCoordinates = (input) => {
+		this.setState({selectingLocation: true});
+
+		this.map.once('click', (e) => { 
+			document.querySelector('#'+input).value = e.lngLat.lng + ', ' + e.lngLat.lat;
+
+			let el = document.createElement('div');
+  			el.className = 'marker marker--' + input;
+
+			new mapboxgl.Marker(el)
+				.setLngLat([e.lngLat.lng, e.lngLat.lat])
+				.addTo(this.map);
+
+			this.setState({selectingLocation: false});
+			return e.lngLat.lng + ', ' + e.lngLat.lat;
+		});
+	}
 
 	generateHeatMap = (safetyGeoJson) => {
-        // const { safetyGeoJson } = this.props;
+		// const { safetyGeoJson } = this.props;
 		console.log(safetyGeoJson);
-			// Add a geojson point source.
-			// Heatmap layers also work with a vector tile source.
+		// Add a geojson point source.
+		// Heatmap layers also work with a vector tile source.
 		this.map.addSource('safetyData', {
 			"type": "geojson",
 			"data": safetyGeoJson
 		});
-		
+
 		this.map.addLayer({
 			id: 'safety-heat',
 			type: 'heatmap',
@@ -86,8 +111,8 @@ class Map extends Component {
 			paint: {
 				// increase weight as diameter breast height increases
 				'heatmap-weight': {
-				property: 'data',
-				type: 'exponential',
+					property: 'data',
+					type: 'exponential',
 					stops: [
 						[1, 0],
 						[62, 1]
@@ -130,28 +155,37 @@ class Map extends Component {
 		}, 'waterway-label');
 	}
 
-    render() {
-        const { geolocations, safetyScores } = this.props;
-		const { mapState } = this.state;
+	render() {
+		const { geolocations, safetyScores } = this.props;
+		const { mapState, layerState, selectingLocation } = this.state;
 
-		if(mapState) {
-			this.generateMarkers();	
+		if (mapState && !layerState) {
+			this.generateMarkers();
 			const safetyGeoJson = createGeoJson(geolocations[0], safetyScores[0]);
 			this.generateHeatMap(safetyGeoJson);
+			this.setState({layerState: true});
 		}
 
-        return (
-            <div className="mapBox" ref={el => this.mapContainer = el} ></div>
-        )
-    }
+		const mapClasses = classNames({
+			'mapBox' : true,
+			'mapBox--selecting': selectingLocation
+		})
+
+		return (
+			<React.Fragment>
+				<RouteInput selectCoordinates={this.selectCoordinates} selectingLocation />
+				<div className={mapClasses} ref={el => this.mapContainer = el} ></div>
+			</React.Fragment>
+		)
+	}
 }
 
 function mapDispatchToProps(dispatch) {
-    return bindActionCreators({ fetchGeolocations, fetchSafetyScores }, dispatch);
+	return bindActionCreators({ fetchGeolocations, fetchSafetyScores }, dispatch);
 }
 
 function mapStateToProps({ geolocations, safetyScores }) {
-    return { geolocations, safetyScores };
+	return { geolocations, safetyScores };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Map);
