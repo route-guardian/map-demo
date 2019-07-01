@@ -84,7 +84,7 @@ class Map extends Component {
 			let el = document.createElement('div');
   			el.className = 'marker marker--' + input;
 
-			new mapboxgl.Marker(el)
+			new mapboxgl.Marker(el, {offset: [0, -25]})
 				.setLngLat([e.lngLat.lng, e.lngLat.lat])
 				.addTo(this.map);
 
