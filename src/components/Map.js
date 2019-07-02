@@ -19,6 +19,8 @@ class Map extends Component {
 		this.state = {
 			mapState: false,
 			layerState: false,
+			heatMap: true,
+			geolocationMarkers: true,
 			selectingLocation: false,
 			inputA: '',
 			inputB: '',
@@ -43,8 +45,8 @@ class Map extends Component {
 		this.map = new mapboxgl.Map({
 			container: this.mapContainer,
 			style: 'mapbox://styles/mapbox/streets-v9',
-			center: [4.47917, 51.9025],
-			zoom: 12,
+			center: [4.4758, 51.9194],
+			zoom: 15,
 			pitch: 45
 		});
 
@@ -57,20 +59,21 @@ class Map extends Component {
 		});
 	}
 
-	generateMarkers = () => {
+	generateGeolocationMarkers = () => {
 		const { geolocations, safetyScores } = this.props;
 
 		for (var location in geolocations[0]) {
 			const lat = geolocations[0][location][0];
 			const lng = geolocations[0][location][1];
-			// console.log(safetyScores[0][location]);
 			const safetyScore = safetyScores[0][location];
 
 			if (lat !== undefined || lng !== undefined) {
-				const popup = new mapboxgl.Popup({ offset: 25 })
+				const popup = new mapboxgl.Popup({ offset: 50 })
 					.setText(location + ' [' + safetyScore + ']' + ' [' + lng + ' ' + lat + ']');
-
-				new mapboxgl.Marker()
+				
+				let el = document.createElement('div');
+				el.className = 'marker marker--geolocations';
+				new mapboxgl.Marker(el, { anchor: 'bottom' })
 					.setLngLat([lng, lat])
 					.setPopup(popup)
 					.addTo(this.map);
@@ -96,7 +99,7 @@ class Map extends Component {
 			let el = document.createElement('div');
 				el.className = 'marker marker--' + input;
 
-			inputMarkers[input] = new mapboxgl.Marker(el, {offset: [0, -25]})
+			inputMarkers[input] = new mapboxgl.Marker(el, { anchor: 'bottom' })
 				.setLngLat([e.lngLat.lng, e.lngLat.lat])
 				.addTo(this.map);
 
@@ -106,9 +109,22 @@ class Map extends Component {
 		});
 	}
 
+	toggleLayer = (layerId) => {
+		if(this.state.mapState){
+			const visibility = this.map.getLayoutProperty(layerId, 'visibility');
+ 
+			if (visibility === 'visible') {
+				this.map.setLayoutProperty(layerId, 'visibility', 'none');
+			} else {
+				this.map.setLayoutProperty(layerId, 'visibility', 'visible');
+			}
+		}
+	}
+
 	generateHeatMap = (safetyGeoJson) => {
-		// const { safetyGeoJson } = this.props;
-		console.log(safetyGeoJson);
+		const { heatMap } = this.state;
+
+		const heatMapId = 'safety-heat';
 		// Add a geojson point source.
 		// Heatmap layers also work with a vector tile source.
 		this.map.addSource('safetyData', {
@@ -117,7 +133,7 @@ class Map extends Component {
 		});
 
 		this.map.addLayer({
-			id: 'safety-heat',
+			id: heatMapId,
 			type: 'heatmap',
 			source: 'safetyData',
 			maxzoom: 15,
@@ -173,7 +189,7 @@ class Map extends Component {
 		const { mapState, layerState, selectingLocation, pointA, pointB } = this.state;
 
 		if (mapState && !layerState) {
-			this.generateMarkers();
+			this.generateGeolocationMarkers();
 			const safetyGeoJson = createGeoJson(geolocations[0], safetyScores[0]);
 			this.generateHeatMap(safetyGeoJson);
 			this.setState({layerState: true});
@@ -186,7 +202,7 @@ class Map extends Component {
 
 		return (
 			<React.Fragment>
-				<RouteInput selectCoordinates={this.selectCoordinates} selectingLocation pointA pointB/>
+				<RouteInput selectCoordinates={this.selectCoordinates} selectingLocation pointA pointB toggleLayer={this.toggleLayer}/>
 				<div className={mapClasses} ref={el => this.mapContainer = el} ></div>
 			</React.Fragment>
 		)
