@@ -19,7 +19,10 @@ class Map extends Component {
 		this.state = {
 			mapState: false,
 			layerState: false,
-			selectingLocation: false
+			selectingLocation: false,
+			inputA: '',
+			inputB: '',
+			inputMarkers: new Object
 		}
 	}
 
@@ -76,17 +79,27 @@ class Map extends Component {
 	}
 
 	selectCoordinates = (input) => {
+		const { inputMarkers } = this.state;
+		
 		this.setState({selectingLocation: true});
 
 		this.map.once('click', (e) => { 
 			document.querySelector('#'+input).value = e.lngLat.lng + ', ' + e.lngLat.lat;
+			this.setState({
+				[input]: e.lngLat.lng + ', ' + e.lngLat.lat
+			})
+
+			if(inputMarkers[input] !== undefined) {
+				inputMarkers[input].remove();
+			}
 
 			let el = document.createElement('div');
-  			el.className = 'marker marker--' + input;
+				el.className = 'marker marker--' + input;
 
-			new mapboxgl.Marker(el, {offset: [0, -25]})
+			inputMarkers[input] = new mapboxgl.Marker(el, {offset: [0, -25]})
 				.setLngLat([e.lngLat.lng, e.lngLat.lat])
 				.addTo(this.map);
+
 
 			this.setState({selectingLocation: false});
 			return e.lngLat.lng + ', ' + e.lngLat.lat;
@@ -157,7 +170,7 @@ class Map extends Component {
 
 	render() {
 		const { geolocations, safetyScores } = this.props;
-		const { mapState, layerState, selectingLocation } = this.state;
+		const { mapState, layerState, selectingLocation, pointA, pointB } = this.state;
 
 		if (mapState && !layerState) {
 			this.generateMarkers();
@@ -173,7 +186,7 @@ class Map extends Component {
 
 		return (
 			<React.Fragment>
-				<RouteInput selectCoordinates={this.selectCoordinates} selectingLocation />
+				<RouteInput selectCoordinates={this.selectCoordinates} selectingLocation pointA pointB/>
 				<div className={mapClasses} ref={el => this.mapContainer = el} ></div>
 			</React.Fragment>
 		)

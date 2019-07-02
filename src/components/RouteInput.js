@@ -27,6 +27,15 @@ class RouteInput extends Component {
             selectCoordinates('inputA');
             console.log(selectLocation);
         });
+
+        const inputB = document.querySelector('#inputB');
+        const buttonB = document.querySelector('#buttonB');
+        buttonB.addEventListener('click', () => {
+            this.setState({pointBActive: true});
+            console.log('button clicked :D');
+            selectCoordinates('inputB');
+            console.log(selectLocation);
+        });
     }
 
     componentDidUpdate() {
@@ -43,6 +52,7 @@ class RouteInput extends Component {
     }
 
     render() {
+        const {inputA, inputB} = this.props;
         const {pointA, pointB} = this.state;
 
         return (
@@ -52,7 +62,7 @@ class RouteInput extends Component {
                     <span>From</span>
                 </div>
                 <div className="row">
-                    <input type="text" id="inputA" value={pointA} disabled/>
+                    <input type="text" id="inputA" value={inputA} disabled/>
                     <div id="buttonA">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
                     </div>
@@ -61,7 +71,7 @@ class RouteInput extends Component {
                     <span>To</span>
                 </div>
                 <div className="row">
-                    <input type="text" id="inputB" value={pointB} disabled/>
+                    <input type="text" id="inputB" value={inputB} disabled/>
                     <div id="buttonB">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>
                     </div>

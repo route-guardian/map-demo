@@ -1,5 +1,5 @@
 .marker {
-	mask-image: url('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
+	mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
 	mask-size: cover;
 	mask-repeat: no-repeat;
 	mask-origin: border-box;
@@ -7,7 +7,6 @@
 	height: 50px;
 	cursor: pointer;
 	background-color: $color-black;
-	// box-shadow: $color-black 10px 10px 20px;
 
   	&--inputA {
 		mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm-1.049 2.379h2.133l2.467 8.82h-1.78l-.63-2.328h-2.362l-.61 2.328H8.45l2.502-8.82zm.986 1.4c-.114.55-.264 1.273-.39 1.79l-.527 2.019h1.88l-.527-2.008c-.138-.55-.288-1.262-.402-1.8h-.034z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
