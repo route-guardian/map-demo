@@ -1,0 +1,61 @@
+.emojiButton {
+    cursor: pointer;
+    user-select: none;
+
+    &--inactive {
+        filter: grayscale(100%);
+    }
+}
+
+.generateButton {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    height: 40px;
+    width: 150px;
+    border: 1px rgba(0,0,0,0.8) solid;
+    margin: 15px 0;
+    transition: box-shadow .3s ease-in;
+    color: $color-black;
+
+    &:hover {
+        box-shadow: 2px 2px 1px rgba(0,0,0,0.3);
+    }
+    
+    &--disabled {
+        cursor: not-allowed;
+        border: 1px rgba(0,0,0,0.2) solid;
+        color: rgba(0,0,0,0.2);
+
+        &:hover {
+            box-shadow: 0 0 0 rgba(0,0,0,0.3);
+        }
+    }
+}
+
+.resetButton {
+    cursor: pointer;   
+    user-select: none; 
+}
+
+#buttonA,
+#buttonB {
+    flex-grow: 1;
+    margin-right: 10px;
+    cursor: pointer;
+    user-select: none;
+
+    svg {
+        width: 35px;
+        transform: translateX(-5px);
+    }
+}
+
+#buttonA {
+    fill: $color-green;
+}
+#buttonB {
+    fill: $color-yellow;
+}

@@ -4,6 +4,8 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import { fetchGeolocations } from '../redux/actions/geolocations';
 import { fetchSafetyScores } from '../redux/actions/safetyScores';
+import { fetchCrime } from '../redux/actions/crime';
+import { fetchCameras } from '../redux/actions/cameras';
 import classNames from 'classnames';
 import { MAP_BOX } from '../redux/keys';
 import createGeoJson from '../js/createGeoJson.js';
@@ -17,14 +19,18 @@ class Map extends Component {
 
 		this.props.fetchSafetyScores();
 		this.props.fetchGeolocations();
+		this.props.fetchCrime();
+		this.props.fetchCameras();
+
 		this.state = {
 			mapState: false,
 			layerState: false,
 			heatMap: true,
 			geolocationMarkers: true,
 			selectingLocation: false,
-			inputA: '',
-			inputB: '',
+			route: false,
+			inputA: undefined,
+			inputB: undefined,
 			inputMarkers: new Object
 		}
 	}
@@ -60,12 +66,21 @@ class Map extends Component {
 		});
 	}
 
+	resetRoute = () => {
+		if(this.map.getLayer('route')) {
+			this.map.removeLayer('route');
+			this.map.removeSource('route');
+			this.setState({route: false});
+		}
+	}
+
 	generateRoute = () => {
-		console.log('start', this.state.inputA);
-		console.log('end', this.state.inputB);
+
+		this.resetRoute();
 
 		const start = this.state.inputA.split(", ");
 		const end = this.state.inputB.split(", ");
+
 
 		axios.post('http://127.0.0.1:5000/point', {
 			startPoint: {
@@ -77,52 +92,54 @@ class Map extends Component {
 				"long": end[0]
 			}
 		})
-			.then((response) => {
-				console.log(response.data);
-				console.log(response.data.response.route[0].waypoint);
+		.then((response) => {
+			console.log(response.data);
+			console.log(response.data.response.route[0].waypoint);
 
-				let generatedPoints = '';
+			let generatedPoints = '';
 
-				response.data.response.route[0].waypoint.forEach(element => {
-					console.log(element.mappedPosition);
-					generatedPoints += element.mappedPosition.longitude + ',' + element.mappedPosition.latitude + ';';
-				});
-				console.log('generatedPoints', generatedPoints);
-
-				if (this.state.mapState) {
-					// TODO: replace these with variables later
-					// const start = [start[1], start[0]];
-					// const end = [end[1], end[0]];
-					// const another = [4.471668742197778, 51.92097401269169];
-					// const andAnother = [4.469088997459863, 51.92254796801646];
-					const directionsRequest = 'https://api.mapbox.com/optimized-trips/v1/mapbox/walking/'
-						+ start[0] + ','
-						+ start[1] + ';'
-						+ generatedPoints
-						+ end[0] + ','
-						+ end[1] + '?source=first&destination=last&roundtrip=false&geometries=geojson&access_token='
-						+ MAP_BOX;
-
-					axios.get(directionsRequest)
-						.then((response) => {
-							const route = response.data.trips[0].geometry;
-							this.map.addLayer({
-								'id': 'route',
-								'type': 'line',
-								'source': {
-									'type': 'geojson',
-									'data': {
-										'type': 'Feature',
-										'geometry': route
-									}
-								}
-							});
-						});
-				}
-			})
-			.catch(function (error) {
-				console.log(error);
+			response.data.response.route[0].waypoint.forEach(element => {
+				console.log(element.mappedPosition);
+				generatedPoints += element.mappedPosition.longitude + ',' + element.mappedPosition.latitude + ';';
 			});
+
+			if (this.state.mapState) {
+				const directionsRequest = 'https://api.mapbox.com/optimized-trips/v1/mapbox/walking/'
+					+ start[0] + ',' + start[1] + ';'
+					+ generatedPoints
+					+ end[0] + ',' + end[1]
+					+ '?source=first&destination=last&roundtrip=false&geometries=geojson&access_token='
+					+ MAP_BOX;
+
+				axios.get(directionsRequest)
+					.then((response) => {
+						const route = response.data.trips[0].geometry;
+						this.map.addLayer({
+							'id': 'route',
+							'type': 'line',
+							'source': {
+								'type': 'geojson',
+								'data': {
+									'type': 'Feature',
+									'geometry': route
+								}
+							},
+							'layout': {
+								'line-join': 'round',
+								'line-cap': 'round'
+							},
+							'paint': {
+								'line-color': '#E37B40',
+								'line-width': 8
+							}
+						});
+						this.setState({route: true});
+					});
+			}
+		})
+		.catch(function (error) {
+			console.log(error);
+		});
 	}
 
 	generateGeolocationMarkers = () => {
@@ -147,13 +164,85 @@ class Map extends Component {
 		}
 	}
 
+	generateCrimeMarkers = () => {
+		const { crime } = this.props;
+
+		crime[0].points.forEach(crimeLocation => {
+			const lat = crimeLocation[0];
+			const lng = crimeLocation[1];
+			console.log(lat, lng)
+			if (lat !== undefined || lng !== undefined) {
+				// const popup = new mapboxgl.Popup({ offset: 50 })
+				// 	.setText(location + ' [' + safetyScore + ']' + ' [' + lng + ' ' + lat + ']');
+					
+				let el = document.createElement('div');
+				el.className = 'marker marker--crime';
+				new mapboxgl.Marker(el, { anchor: 'bottom' })
+					.setLngLat([lat, lng])
+					// .setPopup(popup)
+					.addTo(this.map);
+			}
+		});
+	}
+
+	generateBoundry = () => {
+		this.map.addLayer({
+			'id': 'boundry-layer',
+			'type': 'fill',
+			'source': {
+				'type': 'geojson',
+				'data': {
+					"type": "Feature",
+					"properties": {},
+					"geometry": {
+						"type": "Polygon",
+						"coordinates": [
+							[
+								[4.46713397107527, 51.92543609635268],
+								[4.478894224192658, 51.925800184226034],
+								[4.4835014228346495, 51.916739922307954],
+								[4.472977452985617, 51.91440320664418],
+								[4.46713397107527, 51.92543609635268]
+							]
+						]
+					}
+			  }
+			},
+			'paint': {
+			  'fill-color': 'rgba(70,179,157, 0.2)',
+			  'fill-outline-color': 'rgba(0, 0, 0, 1)'
+			}
+		  });
+	}
+
+	generateCameraMarkers = () => {
+		const { cameras } = this.props;
+
+		cameras[0].points.forEach(cameraLocation => {
+			const lat = cameraLocation[0];
+			const lng = cameraLocation[1];
+			console.log(lat, lng)
+			if (lat !== undefined || lng !== undefined) {
+				// const popup = new mapboxgl.Popup({ offset: 50 })
+				// 	.setText(location + ' [' + safetyScore + ']' + ' [' + lng + ' ' + lat + ']');
+					
+				let el = document.createElement('div');
+				el.className = 'marker marker--camera';
+				new mapboxgl.Marker(el, { anchor: 'bottom' })
+					.setLngLat([lat, lng])
+					// .setPopup(popup)
+					.addTo(this.map);
+			}
+		});
+	}
+
 	selectCoordinates = (input) => {
 		const { inputMarkers } = this.state;
 
 		this.setState({ selectingLocation: true });
 
 		this.map.once('click', (e) => {
-			document.querySelector('#' + input).value = e.lngLat.lng + ', ' + e.lngLat.lat;
+			document.querySelector('#' + input).innerHTML = e.lngLat.lng + ', ' + e.lngLat.lat;
 			this.setState({
 				[input]: e.lngLat.lng + ', ' + e.lngLat.lat
 			})
@@ -252,10 +341,13 @@ class Map extends Component {
 
 	render() {
 		const { geolocations, safetyScores } = this.props;
-		const { mapState, layerState, selectingLocation, pointA, pointB } = this.state;
+		const { mapState, layerState, selectingLocation, route, inputA, inputB } = this.state;
 
 		if (mapState && !layerState) {
 			this.generateGeolocationMarkers();
+			this.generateCrimeMarkers();
+			this.generateCameraMarkers();
+			this.generateBoundry();
 			const safetyGeoJson = createGeoJson(geolocations[0], safetyScores[0]);
 			this.generateHeatMap(safetyGeoJson);
 			this.setState({ layerState: true });
@@ -272,10 +364,12 @@ class Map extends Component {
 				<RouteInput
 					selectCoordinates={this.selectCoordinates}
 					selectingLocation
-					pointA
-					pointB
 					toggleLayer={this.toggleLayer}
-					generateRoute={this.generateRoute} />
+					generateRoute={this.generateRoute}
+					resetRoute={this.resetRoute}
+					route={route} 
+					inputA={inputA}
+					inputB={inputB}/>
 				<div className={mapClasses} ref={el => this.mapContainer = el} ></div>
 			</React.Fragment>
 		)
@@ -283,11 +377,11 @@ class Map extends Component {
 }
 
 function mapDispatchToProps(dispatch) {
-	return bindActionCreators({ fetchGeolocations, fetchSafetyScores }, dispatch);
+	return bindActionCreators({ fetchGeolocations, fetchSafetyScores, fetchCrime, fetchCameras }, dispatch);
 }
 
-function mapStateToProps({ geolocations, safetyScores }) {
-	return { geolocations, safetyScores };
+function mapStateToProps({ geolocations, safetyScores, crime, cameras }) {
+	return { geolocations, safetyScores, crime, cameras };
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(Map);

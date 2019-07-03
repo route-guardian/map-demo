@@ -1,12 +1,30 @@
 .routeInput {
     position: fixed;
-    top: calc(50% - 10rem);
-    left: 5rem;
+    bottom: 75px;
+    left: 75px;
     width: 250px;
-    height: 450px;
-    padding: 10px;
+    padding: 30px;
     background-color: $color-white;
     z-index: 1;
     border-radius: 1rem;
     font-family: 'Raleway', sans-serif;
+    box-shadow: 2px 2px 1px rgba(0,0,0,0.3);
+
+    h2 {
+        margin: 0 0 20px 0;
+    }
+
+    &__sectionB,
+    &__sectionA {
+        margin-top: 5px;
+        height: 40px;
+    }
+
+    &__toggleButtons {
+        margin-top: 10px;
+    }
+
+    &__generateSection {
+        margin-bottom: 10px;
+    }
 }
