@@ -64,52 +64,65 @@ class Map extends Component {
 		console.log('start', this.state.inputA);
 		console.log('end', this.state.inputB);
 
-		const start = this.state.inputA.split(",");
-		const end = this.state.inputB.split(",");
+		const start = this.state.inputA.split(", ");
+		const end = this.state.inputB.split(", ");
 
-		const startPoint = {
-			lat: start[1],
-			long: start[0]
-		}
+		axios.post('http://127.0.0.1:5000/point', {
+			startPoint: {
+				"lat": start[1],
+				"long": start[0]
+			},
+			endPoint: {
+				"lat": end[1],
+				"long": end[0]
+			}
+		})
+			.then((response) => {
+				console.log(response.data);
+				console.log(response.data.response.route[0].waypoint);
 
-		const endPoint = {
-			lat: end[1],
-			long: end[0]
-		}
+				let generatedPoints = '';
 
-		if (this.state.mapState) {
-			// TODO: replace these with variables later
-			const start = [4.466112935430573, 51.9208901135911];
-			const end = [4.471345298240749, 51.92258694057858];
-			const another = [4.471668742197778, 51.92097401269169];
-			const andAnother = [4.469088997459863, 51.92254796801646];
-			const directionsRequest = 'https://api.mapbox.com/optimized-trips/v1/mapbox/walking/'
-				+ start[0] + ','
-				+ start[1] + ';'
-				+ another[0] + ','
-				+ another[1] + ';'
-				+ andAnother[0] + ','
-				+ andAnother[1] + ';'
-				+ end[0] + ','
-				+ end[1] + '?source=first&destination=last&roundtrip=false&geometries=geojson&access_token='
-				+ MAP_BOX;
-
-			axios.get(directionsRequest)
-				.then((response) => {
-					const route = response.data.trips[0].geometry;
-					this.map.addLayer({
-						'id': 'route',
-						'type': 'line',
-						'source': {
-							'type': 'geojson',
-							'data': {
-								'type': 'Feature',
-								'geometry': route
-							}
-						}
-					});
+				response.data.response.route[0].waypoint.forEach(element => {
+					console.log(element.mappedPosition);
+					generatedPoints += element.mappedPosition.longitude + ',' + element.mappedPosition.latitude + ';';
 				});
-		}
+				console.log('generatedPoints', generatedPoints);
+
+				if (this.state.mapState) {
+					// TODO: replace these with variables later
+					// const start = [start[1], start[0]];
+					// const end = [end[1], end[0]];
+					// const another = [4.471668742197778, 51.92097401269169];
+					// const andAnother = [4.469088997459863, 51.92254796801646];
+					const directionsRequest = 'https://api.mapbox.com/optimized-trips/v1/mapbox/walking/'
+						+ start[0] + ','
+						+ start[1] + ';'
+						+ generatedPoints
+						+ end[0] + ','
+						+ end[1] + '?source=first&destination=last&roundtrip=false&geometries=geojson&access_token='
+						+ MAP_BOX;
+
+					axios.get(directionsRequest)
+						.then((response) => {
+							const route = response.data.trips[0].geometry;
+							this.map.addLayer({
+								'id': 'route',
+								'type': 'line',
+								'source': {
+									'type': 'geojson',
+									'data': {
+										'type': 'Feature',
+										'geometry': route
+									}
+								}
+							});
+						});
+				}
+			})
+			.catch(function (error) {
+				console.log(error);
+			});
 	}
 
 	generateGeolocationMarkers = () => {
