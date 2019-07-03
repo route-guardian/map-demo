@@ -12,7 +12,7 @@ export default function postApi(startPoint, endPoint) {
         }
       })
       .then(function (response) {
-        console.log(response.data);
+        return response.data;
       })
       .catch(function (error) {
         console.log(error);
