@@ -8,6 +8,7 @@ import classNames from 'classnames';
 import { MAP_BOX } from '../redux/keys';
 import createGeoJson from '../js/createGeoJson.js';
 import RouteInput from './RouteInput';
+import axios from 'axios';
 
 class Map extends Component {
 
@@ -29,9 +30,9 @@ class Map extends Component {
 	}
 
 	componentDidMount() {
-		const {mapState} = this.state;
+		const { mapState } = this.state;
 
-		if(!mapState) {
+		if (!mapState) {
 			this.generateMap();
 		}
 	}
@@ -59,6 +60,58 @@ class Map extends Component {
 		});
 	}
 
+	generateRoute = () => {
+		console.log('start', this.state.inputA);
+		console.log('end', this.state.inputB);
+
+		const start = this.state.inputA.split(",");
+		const end = this.state.inputB.split(",");
+
+		const startPoint = {
+			lat: start[1],
+			long: start[0]
+		}
+
+		const endPoint = {
+			lat: end[1],
+			long: end[0]
+		}
+
+		if (this.state.mapState) {
+			// TODO: replace these with variables later
+			const start = [4.466112935430573, 51.9208901135911];
+			const end = [4.471345298240749, 51.92258694057858];
+			const another = [4.471668742197778, 51.92097401269169];
+			const andAnother = [4.469088997459863, 51.92254796801646];
+			const directionsRequest = 'https://api.mapbox.com/optimized-trips/v1/mapbox/walking/'
+				+ start[0] + ','
+				+ start[1] + ';'
+				+ another[0] + ','
+				+ another[1] + ';'
+				+ andAnother[0] + ','
+				+ andAnother[1] + ';'
+				+ end[0] + ','
+				+ end[1] + '?source=first&destination=last&roundtrip=false&geometries=geojson&access_token='
+				+ MAP_BOX;
+
+			axios.get(directionsRequest)
+				.then((response) => {
+					const route = response.data.trips[0].geometry;
+					this.map.addLayer({
+						'id': 'route',
+						'type': 'line',
+						'source': {
+							'type': 'geojson',
+							'data': {
+								'type': 'Feature',
+								'geometry': route
+							}
+						}
+					});
+				});
+		}
+	}
+
 	generateGeolocationMarkers = () => {
 		const { geolocations, safetyScores } = this.props;
 
@@ -70,7 +123,7 @@ class Map extends Component {
 			if (lat !== undefined || lng !== undefined) {
 				const popup = new mapboxgl.Popup({ offset: 50 })
 					.setText(location + ' [' + safetyScore + ']' + ' [' + lng + ' ' + lat + ']');
-				
+
 				let el = document.createElement('div');
 				el.className = 'marker marker--geolocations';
 				new mapboxgl.Marker(el, { anchor: 'bottom' })
@@ -83,36 +136,36 @@ class Map extends Component {
 
 	selectCoordinates = (input) => {
 		const { inputMarkers } = this.state;
-		
-		this.setState({selectingLocation: true});
 
-		this.map.once('click', (e) => { 
-			document.querySelector('#'+input).value = e.lngLat.lng + ', ' + e.lngLat.lat;
+		this.setState({ selectingLocation: true });
+
+		this.map.once('click', (e) => {
+			document.querySelector('#' + input).value = e.lngLat.lng + ', ' + e.lngLat.lat;
 			this.setState({
 				[input]: e.lngLat.lng + ', ' + e.lngLat.lat
 			})
 
-			if(inputMarkers[input] !== undefined) {
+			if (inputMarkers[input] !== undefined) {
 				inputMarkers[input].remove();
 			}
 
 			let el = document.createElement('div');
-				el.className = 'marker marker--' + input;
+			el.className = 'marker marker--' + input;
 
 			inputMarkers[input] = new mapboxgl.Marker(el, { anchor: 'bottom' })
 				.setLngLat([e.lngLat.lng, e.lngLat.lat])
 				.addTo(this.map);
 
 
-			this.setState({selectingLocation: false});
+			this.setState({ selectingLocation: false });
 			return e.lngLat.lng + ', ' + e.lngLat.lat;
 		});
 	}
 
 	toggleLayer = (layerId) => {
-		if(this.state.mapState){
+		if (this.state.mapState) {
 			const visibility = this.map.getLayoutProperty(layerId, 'visibility');
- 
+
 			if (visibility === 'visible') {
 				this.map.setLayoutProperty(layerId, 'visibility', 'none');
 			} else {
@@ -192,17 +245,24 @@ class Map extends Component {
 			this.generateGeolocationMarkers();
 			const safetyGeoJson = createGeoJson(geolocations[0], safetyScores[0]);
 			this.generateHeatMap(safetyGeoJson);
-			this.setState({layerState: true});
+			this.setState({ layerState: true });
+			// this.generateRoute();
 		}
 
 		const mapClasses = classNames({
-			'mapBox' : true,
+			'mapBox': true,
 			'mapBox--selecting': selectingLocation
 		})
 
 		return (
 			<React.Fragment>
-				<RouteInput selectCoordinates={this.selectCoordinates} selectingLocation pointA pointB toggleLayer={this.toggleLayer}/>
+				<RouteInput
+					selectCoordinates={this.selectCoordinates}
+					selectingLocation
+					pointA
+					pointB
+					toggleLayer={this.toggleLayer}
+					generateRoute={this.generateRoute} />
 				<div className={mapClasses} ref={el => this.mapContainer = el} ></div>
 			</React.Fragment>
 		)

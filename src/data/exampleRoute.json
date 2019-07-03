@@ -1,0 +1,129 @@
+{
+	"response": {
+		"metaInfo": {
+			"timestamp": "2019-07-03T12:19:29Z",
+			"mapVersion": "8.30.98.150",
+			"moduleVersion": "7.2.201926-4178",
+			"interfaceVersion": "2.6.63",
+			"availableMapVersion": [
+				"8.30.98.150"
+			]
+		},
+		"route": [
+			{
+				"waypoint": [
+					{
+						"linkId": "+757427108",
+						"mappedPosition": {
+							"latitude": 51.9216886,
+							"longitude": 4.4738163
+						},
+						"originalPosition": {
+							"latitude": 51.921678,
+							"longitude": 4.473822
+						},
+						"type": "stopOver",
+						"spot": 0.7534247,
+						"sideOfStreet": "right",
+						"mappedRoadName": "Schouwburgplein",
+						"label": "Schouwburgplein",
+						"shapeIndex": 0,
+						"source": "user"
+					},
+					{
+						"linkId": "+61494366",
+						"mappedPosition": {
+							"latitude": 51.9177067,
+							"longitude": 4.4798577
+						},
+						"originalPosition": {
+							"latitude": 51.9176389,
+							"longitude": 4.479763
+						},
+						"type": "stopOver",
+						"spot": 1.0,
+						"sideOfStreet": "right",
+						"mappedRoadName": "Westblaak",
+						"label": "Westblaak",
+						"shapeIndex": 11,
+						"source": "user"
+					}
+				],
+				"mode": {
+					"type": "fastest",
+					"transportModes": [
+						"pedestrian"
+					],
+					"trafficMode": "disabled",
+					"feature": []
+				},
+				"leg": [
+					{
+						"start": {
+							"linkId": "+757427108",
+							"mappedPosition": {
+								"latitude": 51.9216886,
+								"longitude": 4.4738163
+							},
+							"originalPosition": {
+								"latitude": 51.921678,
+								"longitude": 4.473822
+							},
+							"type": "stopOver",
+							"spot": 0.7534247,
+							"sideOfStreet": "right",
+							"mappedRoadName": "Schouwburgplein",
+							"label": "Schouwburgplein",
+							"shapeIndex": 0,
+							"source": "user"
+						},
+						"end": {
+							"linkId": "+61494366",
+							"mappedPosition": {
+								"latitude": 51.9177067,
+								"longitude": 4.4798577
+							},
+							"originalPosition": {
+								"latitude": 51.9176389,
+								"longitude": 4.479763
+							},
+							"type": "stopOver",
+							"spot": 1.0,
+							"sideOfStreet": "right",
+							"mappedRoadName": "Westblaak",
+							"label": "Westblaak",
+							"shapeIndex": 11,
+							"source": "user"
+						},
+						"length": 752,
+						"travelTime": 764,
+						"maneuver": [
+							{
+								"position": {
+									"latitude": 51.9216886,
+									"longitude": 4.4738163
+								},
+								"travelTime": 0,
+								"length": 0,
+								"id": "M5",
+								"_type": "PrivateTransportManeuverType"
+							}
+						]
+					}
+				],
+				"summary": {
+					"distance": 752,
+					"baseTime": 764,
+					"flags": [
+						"noThroughRoad",
+						"builtUpArea"
+					],
+					"text": "",
+					"travelTime": 764,
+					"_type": "RouteSummaryType"
+				}
+			}
+		],
+		"language": "en-us"
+	}
+}
