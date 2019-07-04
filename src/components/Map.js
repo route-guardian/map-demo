@@ -67,10 +67,10 @@ class Map extends Component {
 	}
 
 	resetRoute = () => {
-		if(this.map.getLayer('route')) {
+		if (this.map.getLayer('route')) {
 			this.map.removeLayer('route');
 			this.map.removeSource('route');
-			this.setState({route: false});
+			this.setState({ route: false });
 		}
 	}
 
@@ -92,54 +92,55 @@ class Map extends Component {
 				"long": end[0]
 			}
 		})
-		.then((response) => {
-			console.log(response.data);
-			console.log(response.data.response.route[0].waypoint);
+			.then((response) => {
+				console.log(response.data);
+				console.log(response.data.response.route[0].waypoint);
 
-			let generatedPoints = '';
+				let generatedPoints = '';
 
-			response.data.response.route[0].waypoint.forEach(element => {
-				console.log(element.mappedPosition);
-				generatedPoints += element.mappedPosition.longitude + ',' + element.mappedPosition.latitude + ';';
-			});
+				response.data.response.route[0].waypoint.forEach(element => {
+					console.log(element.mappedPosition);
+					generatedPoints += element.mappedPosition.longitude + ',' + element.mappedPosition.latitude + ';';
+				});
 
-			if (this.state.mapState) {
-				const directionsRequest = 'https://api.mapbox.com/optimized-trips/v1/mapbox/walking/'
-					+ start[0] + ',' + start[1] + ';'
-					+ generatedPoints
-					+ end[0] + ',' + end[1]
-					+ '?source=first&destination=last&roundtrip=false&geometries=geojson&access_token='
-					+ MAP_BOX;
+				if (this.state.mapState) {
+					const directionsRequest = 'https://api.mapbox.com/directions/v5/mapbox/walking/'
+						+ start[0] + ',' + start[1] + ';'
+						+ generatedPoints
+						+ end[0] + ',' + end[1]
+						+ '?steps=true&geometries=geojson&access_token='
+						+ MAP_BOX;
 
-				axios.get(directionsRequest)
-					.then((response) => {
-						const route = response.data.trips[0].geometry;
-						this.map.addLayer({
-							'id': 'route',
-							'type': 'line',
-							'source': {
-								'type': 'geojson',
-								'data': {
-									'type': 'Feature',
-									'geometry': route
+					axios.get(directionsRequest)
+						.then((response) => {
+							console.log(response)
+							const route = response.data.routes[0].geometry;
+							this.map.addLayer({
+								'id': 'route',
+								'type': 'line',
+								'source': {
+									'type': 'geojson',
+									'data': {
+										'type': 'Feature',
+										'geometry': route
+									}
+								},
+								'layout': {
+									'line-join': 'round',
+									'line-cap': 'round'
+								},
+								'paint': {
+									'line-color': '#E37B40',
+									'line-width': 8
 								}
-							},
-							'layout': {
-								'line-join': 'round',
-								'line-cap': 'round'
-							},
-							'paint': {
-								'line-color': '#E37B40',
-								'line-width': 8
-							}
+							});
+							this.setState({ route: true });
 						});
-						this.setState({route: true});
-					});
-			}
-		})
-		.catch(function (error) {
-			console.log(error);
-		});
+				}
+			})
+			.catch(function (error) {
+				console.log(error);
+			});
 	}
 
 	generateGeolocationMarkers = () => {
@@ -174,7 +175,7 @@ class Map extends Component {
 			if (lat !== undefined || lng !== undefined) {
 				// const popup = new mapboxgl.Popup({ offset: 50 })
 				// 	.setText(location + ' [' + safetyScore + ']' + ' [' + lng + ' ' + lat + ']');
-					
+
 				let el = document.createElement('div');
 				el.className = 'marker marker--crime';
 				new mapboxgl.Marker(el, { anchor: 'bottom' })
@@ -206,13 +207,13 @@ class Map extends Component {
 							]
 						]
 					}
-			  }
+				}
 			},
 			'paint': {
-			  'fill-color': 'rgba(70,179,157, 0.2)',
-			  'fill-outline-color': 'rgba(0, 0, 0, 1)'
+				'fill-color': 'rgba(70,179,157, 0.2)',
+				'fill-outline-color': 'rgba(0, 0, 0, 1)'
 			}
-		  });
+		});
 	}
 
 	generateCameraMarkers = () => {
@@ -225,7 +226,7 @@ class Map extends Component {
 			if (lat !== undefined || lng !== undefined) {
 				// const popup = new mapboxgl.Popup({ offset: 50 })
 				// 	.setText(location + ' [' + safetyScore + ']' + ' [' + lng + ' ' + lat + ']');
-					
+
 				let el = document.createElement('div');
 				el.className = 'marker marker--camera';
 				new mapboxgl.Marker(el, { anchor: 'bottom' })
@@ -367,9 +368,9 @@ class Map extends Component {
 					toggleLayer={this.toggleLayer}
 					generateRoute={this.generateRoute}
 					resetRoute={this.resetRoute}
-					route={route} 
+					route={route}
 					inputA={inputA}
-					inputB={inputB}/>
+					inputB={inputB} />
 				<div className={mapClasses} ref={el => this.mapContainer = el} ></div>
 			</React.Fragment>
 		)
